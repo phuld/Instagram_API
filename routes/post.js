@@ -52,4 +52,46 @@ router.get('/myposts', requireLogin, (request, response) => {
         })
 })
 
+router.put('/like', requireLogin, (request, response) => {
+    Post.findByIdAndUpdate(request.body.postId, {
+        $push: {
+            likes: request.user._id
+        }
+    },{
+        new: true
+    }).exec((err, result) => {
+        if(err) {
+            return response.status(422).json({
+                error: err
+            })
+        }else if(!result) {
+            return response.status(404).json({
+                error: 'Post not found'
+            })
+        }else {
+            return response.json(result)
+        }
+    })
+})
+
+router.put('/unlike', requireLogin, (request, response) => {
+    Post.findByIdAndUpdate(request.body.postId, {
+        $pull:{
+            likes: request.user._id
+        }
+    }, {new: true}).exec((error, result) => {
+        if(error) {
+            return response.status(422).json({
+                error: error
+            })
+        }else if(!result) {
+            return  response.status(404).json({
+                error: "You didn't like this post"
+            })
+        }else {
+            return response.json(result)
+        }
+    })
+})
+
 module.exports = router

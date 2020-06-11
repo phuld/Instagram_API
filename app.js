@@ -14,7 +14,8 @@ app.use(require('./routes/post'))
 
 mongoose.connect(MONGOURI, {
     useNewUrlParser: true, 
-    useUnifiedTopology: true
+    useUnifiedTopology: true, 
+    useFindAndModify: true
 });
 
 mongoose.connection.on('connected', () => {
