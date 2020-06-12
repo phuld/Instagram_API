@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const mongoose = require('mongoose')
 const requireLogin = require('../middlewares/requiredLogin')
+const { request } = require('express')
 
 const Post = mongoose.model('Post')
 
@@ -17,7 +18,8 @@ router.post('/createpost', requireLogin, (request, response) => {
     const post = new Post({
         caption,
         photo,
-        postedBy: request.user
+        postedBy: request.user,
+        createdAt: new Date().toISOString()
     })
     post.save()
         .then(postData => {
@@ -32,6 +34,7 @@ router.post('/createpost', requireLogin, (request, response) => {
 
 router.get('/allposts', (request, response) => {
     Post.find()
+        .sort({ createdAt: -1 })
         .populate('postedBy', "_id username")
         .populate('comments.postedBy', "_id username")
         .then(data => {
@@ -114,15 +117,40 @@ router.post('/comment', requireLogin, (request, response) => {
     }, {
         new: true
     })
-    .populate('postedBy', "_id username")
-    .populate('comments.postedBy', '_id username')
-    .exec((error, result) => {
-        if (error) {
-            return response.status(422).json(error)
-        } else {
-            return response.json(result)
-        }
-    })
+        .populate('postedBy', "_id username")
+        .populate('comments.postedBy', '_id username')
+        .exec((error, result) => {
+            if (error) {
+                return response.status(422).json(error)
+            } else {
+                return response.json(result)
+            }
+        })
+})
+
+router.delete('/posts/:postId', requireLogin, (request, response) => {
+    Post.findOne({ _id: request.params.postId })
+        .populate('postedBy', '_id')
+        .exec((error, post) => {
+            if (error || !post) {
+                return response.status(422).json({
+                    error: error
+                })
+            }
+            if (post.postedBy._id.toString() === request.user._id.toString()) {
+                post.remove()
+                    .then(result => {
+                        return response.json(result)
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
+            } else {
+                return response.status(422).json({
+                    error: "Not permition to delete this post"
+                })
+            }
+        })
 })
 
 module.exports = router
