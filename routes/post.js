@@ -33,6 +33,7 @@ router.post('/createpost', requireLogin, (request, response) => {
 router.get('/allposts', (request, response) => {
     Post.find()
         .populate('postedBy', "_id username")
+        .populate('comments.postedBy', "_id username")
         .then(data => {
             response.json({
                 posts: data
@@ -57,18 +58,18 @@ router.put('/like', requireLogin, (request, response) => {
         $push: {
             likes: request.user._id
         }
-    },{
+    }, {
         new: true
     }).exec((err, result) => {
-        if(err) {
+        if (err) {
             return response.status(422).json({
                 error: err
             })
-        }else if(!result) {
+        } else if (!result) {
             return response.status(404).json({
                 error: 'Post not found'
             })
-        }else {
+        } else {
             return response.json(result)
         }
     })
@@ -76,19 +77,49 @@ router.put('/like', requireLogin, (request, response) => {
 
 router.put('/unlike', requireLogin, (request, response) => {
     Post.findByIdAndUpdate(request.body.postId, {
-        $pull:{
+        $pull: {
             likes: request.user._id
         }
-    }, {new: true}).exec((error, result) => {
-        if(error) {
+    }, { new: true }).exec((error, result) => {
+        if (error) {
             return response.status(422).json({
                 error: error
             })
-        }else if(!result) {
-            return  response.status(404).json({
+        } else if (!result) {
+            return response.status(404).json({
                 error: "You didn't like this post"
             })
-        }else {
+        } else {
+            return response.json(result)
+        }
+    })
+})
+
+router.post('/comment', requireLogin, (request, response) => {
+    const { text } = request.body
+    if (!text) {
+        return response.status(422).json({
+            error: 'Must not be empty'
+        })
+    }
+    const newComment = {
+        text,
+        postedBy: request.user._id,
+        createdAt: new Date().toISOString()
+    }
+    Post.findByIdAndUpdate(request.body.postId, {
+        $push: {
+            comments: newComment
+        }
+    }, {
+        new: true
+    })
+    .populate('postedBy', "_id username")
+    .populate('comments.postedBy', '_id username')
+    .exec((error, result) => {
+        if (error) {
+            return response.status(422).json(error)
+        } else {
             return response.json(result)
         }
     })
