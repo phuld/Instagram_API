@@ -153,4 +153,44 @@ router.delete('/posts/:postId', requireLogin, (request, response) => {
         })
 })
 
+router.get('/posts/:postId', (request, response) => {
+    Post.findOne({_id: request.params.postId})
+    .populate('postedBy', '_id username')
+    .populate('comments.postedBy', '_id username')
+    .exec((error, post) => {
+        if(error || !post) {
+            response.status(404).json({error: 'Post not found'})
+        }
+        response.json(post)
+    })
+})
+
+router.put('/posts/:postId', requireLogin, (request, response) => {
+    const { caption, photo } = request.body
+    if (!caption || !photo) {
+        return response.status(422).json({
+            error: 'Please add all the fields'
+        })
+    }
+    const updatePost = { caption, photo }
+    Post.findOne({ _id: request.params.postId })
+        .populate('postedBy', '_id username')
+        .exec((error, post) => {
+            if (error || !post) {
+                return response.status(404).json({ error: 'Post not found' })
+            }
+            if (post.postedBy.username !== request.user.username) {
+                return response.status(422).json({ error: 'Not permition to edit this post' })
+            }
+            Post.findOneAndUpdate({_id: request.params.postId}, updatePost, {new: true})
+                .populate('postedBy', '_id username')
+                .exec((error, updatedPost) => {
+                    if (error) {
+                        response.status(422).json(error)
+                    }
+                    response.json(updatedPost)
+                })
+        })
+})
+
 module.exports = router
