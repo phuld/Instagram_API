@@ -29,6 +29,12 @@ const postSchema = new mongoose.Schema({
         type: ObjectId, 
         ref: 'User'
     },
+    saved: [
+        {
+            type: ObjectId, 
+            ref: 'User'
+        }
+    ],
     createdAt: {
         type: Date
     }

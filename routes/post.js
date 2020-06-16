@@ -3,6 +3,7 @@ const router = express.Router()
 const mongoose = require('mongoose')
 const requireLogin = require('../middlewares/requiredLogin')
 const { request } = require('express')
+const requiredLogin = require('../middlewares/requiredLogin')
 
 const Post = mongoose.model('Post')
 
@@ -199,6 +200,38 @@ router.put('/posts/:postId', requireLogin, (request, response) => {
         })
 })
 
+router.put('/saved', requiredLogin, (request, response) => {
+    Post.findByIdAndUpdate(request.body.postId, {
+        $push: {
+            saved: request.user._id
+        }
+    }, {new: true})
+    .populate('comments.postedBy', '_id username')
+    .populate('postedBy', '_id username')
+    .exec((error, result) => {
+        if(error) {
+            response.status(422).json(error)
+        }else if(!result) {
+            response.status(404).json({error: 'Post not found'})
+        }else return response.json(result)
+    })
+})
 
+router.put('/unsaved', requiredLogin, (request, response) => {
+    Post.findByIdAndUpdate(request.body.postId, {
+        $pull: {
+            saved: request.user._id
+        }
+    }, {new: true})
+    .populate('comments.postedBy', '_id username')
+    .populate('postedBy', '_id username')
+    .exec((error, result) => {
+        if(error) {
+            response.status(422).json(error)
+        }else if(!result) {
+            response.status(404).json({error: 'Post not found'})
+        }else return response.json(result)
+    })
+})
 
 module.exports = router
