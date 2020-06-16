@@ -63,7 +63,10 @@ router.put('/like', requireLogin, (request, response) => {
         }
     }, {
         new: true
-    }).exec((err, result) => {
+    })
+    .populate('comments.postedBy', '_id username')
+    .populate('postedBy', '_id username')
+    .exec((err, result) => {
         if (err) {
             return response.status(422).json({
                 error: err
@@ -83,7 +86,10 @@ router.put('/unlike', requireLogin, (request, response) => {
         $pull: {
             likes: request.user._id
         }
-    }, { new: true }).exec((error, result) => {
+    }, { new: true })
+    .populate('comments.postedBy', '_id username')
+    .populate('postedBy', '_id username')
+    .exec((error, result) => {
         if (error) {
             return response.status(422).json({
                 error: error
@@ -192,5 +198,7 @@ router.put('/posts/:postId', requireLogin, (request, response) => {
                 })
         })
 })
+
+
 
 module.exports = router

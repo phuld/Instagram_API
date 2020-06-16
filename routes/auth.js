@@ -99,7 +99,7 @@ router.post('/login', (request, response) => {
 
 router.get('/user', requiredLogin, (request, response) => {
     // console.log(request.user._id)
-    User.findById(request.user._id, 'fullname username email')
+    User.findById(request.user._id, 'fullname username email followers following')
     .then(data => {
         return response.json(data)
     })
