@@ -8,6 +8,17 @@ const isEmail = (email) => {
     return regex.test(email.toLowerCase())
 }
 
+const isWebsite = (website) => {
+    const array = website.split('.')
+    if(!array[0] || !array[1]) return false
+    return true
+}
+
+const isPhoneNumber = (number) => {
+    let regex =/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+    return regex.test(number)
+}
+
 exports.validateSignup = (newUser) => {
     const errors = {};
     if(isEmpty(newUser.email)) {
@@ -47,4 +58,18 @@ exports.validateLogin = (userData) => {
         valid: Object.keys(errors).length === 0,
         errors
     }
+}
+
+exports.validateProfile = (profile) => {
+    let errors = ''
+    if(isEmpty(profile.username)) {
+        errors = "Username must not empty"
+    }
+    else if(!isEmpty(profile.website) && !isWebsite(profile.website)) {
+        errors = "Must be a valid website"
+    }      
+    else if(!isEmpty(profile.phoneNumber) && !isPhoneNumber(profile.phoneNumber)) {
+        errors = "Must be a valid phone number"
+    }   
+    return errors
 }

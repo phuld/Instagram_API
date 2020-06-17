@@ -234,4 +234,30 @@ router.put('/unsaved', requiredLogin, (request, response) => {
     })
 })
 
+router.get('/followingposts', requiredLogin, (request, response) => {
+    Post.find({
+        postedBy: {$in: request.user.following}
+    })
+    .populate('comments.postedBy', '_id username')
+    .populate('postedBy', '_id username')
+    .exec((error, result) => {
+        if(error) {
+            response.status(422).json(error)
+        }
+        response.json(result)
+    })
+})
+
+router.get('/savedposts', requiredLogin, (request, response) => {
+    Post.find({saved: request.user._id})
+    .populate('comments.postedBy', '_id username')
+    .populate('postedBy', '_id username')
+    .exec((error, result) => {
+        if(error) {
+            response.status(422).json(error)
+        }
+        response.json(result)
+    })
+})
+
 module.exports = router
