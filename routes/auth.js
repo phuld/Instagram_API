@@ -140,6 +140,19 @@ router.put('/user', requiredLogin, (request, response) => {
         })
 })
 
+router.put('/user/avatar', requiredLogin, (request, response) => {
+    User.findByIdAndUpdate(request.user._id, {
+        $set: {avatar: request.body.avatar}
+    }, {new: true})
+    .select('-password')
+    .exec((error, result) => {
+        if(error) {
+            response.status(422).json(error)
+        }
+        response.json(result)
+    })
+})
+
 // router.get('/protected', )
 
 module.exports = router
